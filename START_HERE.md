@@ -117,7 +117,7 @@ Key files to understand:
 - Docker Desktop
 - kubectl CLI
 - Helm 3
-- k3d
+- k3d    
 - 8GB RAM recommended
 
 ### Production
