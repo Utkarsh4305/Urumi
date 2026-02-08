@@ -1,0 +1,23 @@
+# Local development overrides for k3d
+
+ingress:
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+mysql:
+  persistence:
+    enabled: true
+    size: 2Gi  # Smaller size for local development
+
+wordpress:
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+resourceQuota:
+  enabled: false  # Disable resource quotas for local development

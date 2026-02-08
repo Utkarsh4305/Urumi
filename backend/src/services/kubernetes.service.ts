@@ -1,0 +1,207 @@
+import * as k8s from '@kubernetes/client-node';
+import logger from '../utils/logger';
+
+export class KubernetesService {
+  private kc: k8s.KubeConfig;
+  private coreApi: k8s.CoreV1Api;
+  private appsApi: k8s.AppsV1Api;
+  private networkingApi: k8s.NetworkingV1Api;
+
+  constructor() {
+    this.kc = new k8s.KubeConfig();
+    this.kc.loadFromDefault();
+
+    this.coreApi = this.kc.makeApiClient(k8s.CoreV1Api);
+    this.appsApi = this.kc.makeApiClient(k8s.AppsV1Api);
+    this.networkingApi = this.kc.makeApiClient(k8s.NetworkingV1Api);
+  }
+
+  /**
+   * Create a new namespace
+   */
+  async createNamespace(name: string): Promise<void> {
+    try {
+      const namespace: k8s.V1Namespace = {
+        metadata: {
+          name,
+          labels: {
+            'app.kubernetes.io/managed-by': 'urumi',
+            'urumi.io/store': name
+          }
+        }
+      };
+
+      await this.coreApi.createNamespace(namespace);
+      logger.info('Namespace created', { namespace: name });
+    } catch (error: any) {
+      if (error.statusCode === 409) {
+        logger.warn('Namespace already exists', { namespace: name });
+        return;
+      }
+      logger.error('Failed to create namespace', {
+        namespace: name,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a namespace
+   */
+  async deleteNamespace(name: string): Promise<void> {
+    try {
+      await this.coreApi.deleteNamespace(name);
+      logger.info('Namespace deleted', { namespace: name });
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        logger.warn('Namespace does not exist', { namespace: name });
+        return;
+      }
+      logger.error('Failed to delete namespace', {
+        namespace: name,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Check if namespace exists
+   */
+  async namespaceExists(name: string): Promise<boolean> {
+    try {
+      await this.coreApi.readNamespace(name);
+      return true;
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get deployment status
+   */
+  async getDeploymentStatus(namespace: string, name: string): Promise<boolean> {
+    try {
+      const response = await this.appsApi.readNamespacedDeployment(name, namespace);
+      const deployment = response.body;
+
+      const ready = deployment.status?.readyReplicas || 0;
+      const desired = deployment.spec?.replicas || 0;
+
+      return ready === desired && ready > 0;
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        return false;
+      }
+      logger.error('Failed to get deployment status', {
+        namespace,
+        name,
+        error: error.message
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Get StatefulSet status
+   */
+  async getStatefulSetStatus(namespace: string, name: string): Promise<boolean> {
+    try {
+      const response = await this.appsApi.readNamespacedStatefulSet(name, namespace);
+      const statefulSet = response.body;
+
+      const ready = statefulSet.status?.readyReplicas || 0;
+      const desired = statefulSet.spec?.replicas || 0;
+
+      return ready === desired && ready > 0;
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        return false;
+      }
+      logger.error('Failed to get StatefulSet status', {
+        namespace,
+        name,
+        error: error.message
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Get all pods in a namespace
+   */
+  async getPods(namespace: string): Promise<k8s.V1Pod[]> {
+    try {
+      const response = await this.coreApi.listNamespacedPod(namespace);
+      return response.body.items;
+    } catch (error: any) {
+      logger.error('Failed to get pods', { namespace, error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Check if all pods in namespace are ready
+   */
+  async areAllPodsReady(namespace: string): Promise<boolean> {
+    try {
+      const pods = await this.getPods(namespace);
+
+      if (pods.length === 0) {
+        return false;
+      }
+
+      return pods.every(pod => {
+        const conditions = pod.status?.conditions || [];
+        const readyCondition = conditions.find(c => c.type === 'Ready');
+        return readyCondition?.status === 'True';
+      });
+    } catch (error: any) {
+      logger.error('Failed to check pod readiness', {
+        namespace,
+        error: error.message
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Get ingress hostname
+   */
+  async getIngressHost(namespace: string, name: string): Promise<string | null> {
+    try {
+      const response = await this.networkingApi.readNamespacedIngress(name, namespace);
+      const ingress = response.body;
+
+      const host = ingress.spec?.rules?.[0]?.host || null;
+      return host;
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        return null;
+      }
+      logger.error('Failed to get ingress', { namespace, name, error: error.message });
+      return null;
+    }
+  }
+
+  /**
+   * Check cluster connectivity
+   */
+  async checkConnectivity(): Promise<boolean> {
+    try {
+      await this.coreApi.listNamespace();
+      return true;
+    } catch (error: any) {
+      logger.error('Failed to connect to Kubernetes cluster', {
+        error: error.message
+      });
+      return false;
+    }
+  }
+}
+
+export default new KubernetesService();

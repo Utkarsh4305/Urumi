@@ -1,0 +1,88 @@
+# Default values for store chart
+# This is a YAML-formatted file.
+
+storeId: ""  # Injected dynamically
+
+wordpress:
+  image:
+    repository: urumi/wordpress-woocommerce
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicas: 1
+
+  adminUser: admin
+  adminPassword: ""  # Generated dynamically
+  adminEmail: admin@example.com
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 120
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+mysql:
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+
+  auth:
+    database: wordpress
+    username: wordpress
+    password: ""  # Generated dynamically
+    rootPassword: ""  # Generated dynamically
+
+  persistence:
+    enabled: true
+    storageClass: ""  # Use default storage class
+    size: 5Gi
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  hosts:
+    - host: ""  # Injected as <store-id>.localhost or <store-id>.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+    persistentvolumeclaims: "2"

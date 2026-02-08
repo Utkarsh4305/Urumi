@@ -1,0 +1,27 @@
+# Production overrides for k3s
+
+ingress:
+  className: nginx  # or traefik, depending on your setup
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod  # Optional: for TLS
+  tls:
+    - secretName: store-tls
+      hosts:
+        - "*.yourdomain.com"
+
+mysql:
+  persistence:
+    enabled: true
+    size: 10Gi
+
+wordpress:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+resourceQuota:
+  enabled: true

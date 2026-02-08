@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/component: wordpress
+    urumi.io/store-id: {{ .Values.storeId | quote }}
+spec:
+  replicas: {{ .Values.wordpress.replicas }}
+  selector:
+    matchLabels:
+      app: wordpress
+      urumi.io/store-id: {{ .Values.storeId | quote }}
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        urumi.io/store-id: {{ .Values.storeId | quote }}
+    spec:
+      containers:
+        - name: wordpress
+          image: {{ .Values.wordpress.image.repository }}:{{ .Values.wordpress.image.tag }}
+          imagePullPolicy: {{ .Values.wordpress.image.pullPolicy }}
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mysql:3306
+            - name: WORDPRESS_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: database
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: WORDPRESS_CONFIG_EXTRA
+              value: |
+                define('WP_HOME', 'http://{{ (index .Values.ingress.hosts 0).host }}');
+                define('WP_SITEURL', 'http://{{ (index .Values.ingress.hosts 0).host }}');
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: wordpress-data
+              mountPath: /var/www/html
+          resources:
+            {{- toYaml .Values.wordpress.resources | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.wordpress.readinessProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.wordpress.livenessProbe | nindent 12 }}
+      volumes:
+        - name: wordpress-data
+          emptyDir: {}  # Use emptyDir for simplicity; can be changed to PVC if needed
