@@ -11,8 +11,32 @@ Install these tools first:
 - **kubectl**: `choco install kubernetes-cli`
 - **Helm**: `choco install kubernetes-helm`
 - **k3d**: `choco install k3d`
+- **Supabase Account**: https://supabase.com (free tier works)
 
-## Automated Setup (Recommended)
+## Step 1: Setup Supabase
+
+1. Go to [supabase.com](https://supabase.com) and create a project
+2. Open the **SQL Editor** in your Supabase dashboard
+3. Run the schema from `docs/supabase-schema.sql`:
+   ```sql
+   CREATE TABLE IF NOT EXISTS stores (
+     id VARCHAR(16) PRIMARY KEY,
+     type VARCHAR(20) NOT NULL,
+     namespace VARCHAR(64) NOT NULL UNIQUE,
+     status VARCHAR(20) NOT NULL,
+     url VARCHAR(255),
+     error_message TEXT,
+     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+   );
+   CREATE INDEX IF NOT EXISTS idx_stores_status ON stores(status);
+   CREATE INDEX IF NOT EXISTS idx_stores_created_at ON stores(created_at);
+   ```
+4. Get your credentials from **Settings → API**:
+   - `Project URL` → `SUPABASE_URL`
+   - `service_role` key → `SUPABASE_SERVICE_KEY`
+
+## Step 2: Automated Setup (Recommended)
 
 Run the setup script:
 
@@ -25,58 +49,35 @@ This script will:
 1. ✓ Check prerequisites
 2. ✓ Create k3d cluster
 3. ✓ Build Docker image
-4. ✓ Start PostgreSQL
-5. ✓ Setup backend
-6. ✓ Setup dashboard
-7. ✓ Run migrations
-8. ✓ Verify everything
+4. ✓ Setup backend
+5. ✓ Setup dashboard
+6. ✓ Verify everything
 
-## Manual Setup
+## Step 3: Configure Backend
 
-If you prefer manual setup:
-
-### 1. Create Cluster
-
-```bash
-k3d cluster create urumi-local --port "80:80@loadbalancer"
-```
-
-### 2. Build Image
-
-```bash
-cd docker/wordpress-woocommerce
-docker build -t urumi/wordpress-woocommerce:latest .
-k3d image import urumi/wordpress-woocommerce:latest -c urumi-local
-```
-
-### 3. Start Database
-
-```bash
-docker run -d --name urumi-postgres \
-  -e POSTGRES_DB=urumi \
-  -e POSTGRES_USER=urumi \
-  -e POSTGRES_PASSWORD=urumi123 \
-  -p 5432:5432 \
-  postgres:15
-```
-
-### 4. Setup Backend
-
-```bash
+```powershell
 cd backend
-npm install
 cp .env.example .env
-npm run migrate
-npm run dev  # Keep this running
 ```
 
-### 5. Setup Dashboard
+Edit `backend/.env` with your Supabase credentials:
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key
+```
 
-```bash
+## Step 4: Start Services
+
+**Terminal 1 - Backend:**
+```powershell
+cd backend
+npm run dev
+```
+
+**Terminal 2 - Dashboard:**
+```powershell
 cd dashboard
-npm install
-cp .env.example .env
-npm run dev  # Keep this running
+npm run dev
 ```
 
 ## Usage
@@ -123,15 +124,15 @@ Check Kubernetes:
 kubectl get pods -n store-<store-id>
 ```
 
+### Database connection issues?
+
+Verify your Supabase credentials in `backend/.env`:
+- Check `SUPABASE_URL` matches your project URL
+- Check `SUPABASE_SERVICE_KEY` is the **service_role** key (not anon key)
+
 ### Need more help?
 
 See [docs/troubleshooting.md](docs/troubleshooting.md)
-
-## What's Next?
-
-- Read [docs/architecture.md](docs/architecture.md) to understand the system
-- Check [docs/local-setup.md](docs/local-setup.md) for detailed setup
-- See [README.md](README.md) for full documentation
 
 ## Cleanup
 
@@ -140,10 +141,6 @@ To remove everything:
 ```bash
 # Delete cluster
 k3d cluster delete urumi-local
-
-# Remove database
-docker stop urumi-postgres
-docker rm urumi-postgres
 
 # Remove image
 docker rmi urumi/wordpress-woocommerce:latest

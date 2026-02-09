@@ -1,9 +1,6 @@
-import knex from 'knex';
-import dbConfig from '../config/database';
+import { supabase } from '../config/supabase';
 import { Store, CreateStoreInput, UpdateStoreInput, StoreStatus } from '../models/store.model';
 import logger from '../utils/logger';
-
-const db = knex(dbConfig[process.env.NODE_ENV || 'development']);
 
 export class StoreRepository {
   /**
@@ -11,16 +8,23 @@ export class StoreRepository {
    */
   async create(input: CreateStoreInput): Promise<Store> {
     try {
-      const [store] = await db('stores')
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('stores')
         .insert({
           ...input,
-          created_at: new Date(),
-          updated_at: new Date()
+          created_at: now,
+          updated_at: now
         })
-        .returning('*');
+        .select()
+        .single();
 
-      logger.info('Store created in database', { storeId: store.id });
-      return store;
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      logger.info('Store created in database', { storeId: data.id });
+      return this.mapToStore(data);
     } catch (error: any) {
       logger.error('Failed to create store in database', {
         error: error.message,
@@ -35,11 +39,16 @@ export class StoreRepository {
    */
   async findAll(): Promise<Store[]> {
     try {
-      const stores = await db('stores')
+      const { data, error } = await supabase
+        .from('stores')
         .select('*')
-        .orderBy('created_at', 'desc');
+        .order('created_at', { ascending: false });
 
-      return stores;
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return (data || []).map(this.mapToStore);
     } catch (error: any) {
       logger.error('Failed to retrieve stores', { error: error.message });
       throw error;
@@ -51,11 +60,21 @@ export class StoreRepository {
    */
   async findById(id: string): Promise<Store | null> {
     try {
-      const store = await db('stores')
-        .where({ id })
-        .first();
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-      return store || null;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned
+          return null;
+        }
+        throw new Error(error.message);
+      }
+
+      return data ? this.mapToStore(data) : null;
     } catch (error: any) {
       logger.error('Failed to retrieve store', { error: error.message, storeId: id });
       throw error;
@@ -67,16 +86,25 @@ export class StoreRepository {
    */
   async update(id: string, input: UpdateStoreInput): Promise<Store | null> {
     try {
-      const [store] = await db('stores')
-        .where({ id })
+      const { data, error } = await supabase
+        .from('stores')
         .update({
           ...input,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
-        .returning('*');
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw new Error(error.message);
+      }
 
       logger.info('Store updated in database', { storeId: id, updates: input });
-      return store || null;
+      return data ? this.mapToStore(data) : null;
     } catch (error: any) {
       logger.error('Failed to update store', {
         error: error.message,
@@ -114,12 +142,17 @@ export class StoreRepository {
    */
   async delete(id: string): Promise<boolean> {
     try {
-      const deleted = await db('stores')
-        .where({ id })
-        .delete();
+      const { error, count } = await supabase
+        .from('stores')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw new Error(error.message);
+      }
 
       logger.info('Store deleted from database', { storeId: id });
-      return deleted > 0;
+      return (count ?? 1) > 0;
     } catch (error: any) {
       logger.error('Failed to delete store', { error: error.message, storeId: id });
       throw error;
@@ -131,12 +164,16 @@ export class StoreRepository {
    */
   async countByStatus(status: StoreStatus): Promise<number> {
     try {
-      const result = await db('stores')
-        .where({ status })
-        .count('* as count')
-        .first();
+      const { count, error } = await supabase
+        .from('stores')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', status);
 
-      return parseInt(result?.count as string) || 0;
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return count || 0;
     } catch (error: any) {
       logger.error('Failed to count stores', { error: error.message, status });
       throw error;
@@ -148,15 +185,35 @@ export class StoreRepository {
    */
   async count(): Promise<number> {
     try {
-      const result = await db('stores')
-        .count('* as count')
-        .first();
+      const { count, error } = await supabase
+        .from('stores')
+        .select('*', { count: 'exact', head: true });
 
-      return parseInt(result?.count as string) || 0;
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return count || 0;
     } catch (error: any) {
       logger.error('Failed to count stores', { error: error.message });
       throw error;
     }
+  }
+
+  /**
+   * Map database record to Store interface
+   */
+  private mapToStore(record: any): Store {
+    return {
+      id: record.id,
+      type: record.type,
+      namespace: record.namespace,
+      status: record.status,
+      url: record.url,
+      error_message: record.error_message,
+      created_at: new Date(record.created_at),
+      updated_at: new Date(record.updated_at)
+    };
   }
 }
 

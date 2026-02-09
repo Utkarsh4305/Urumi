@@ -145,9 +145,6 @@ npm run dev
 kubectl cluster-info
 kubectl get nodes
 
-# Database
-docker ps | grep postgres
-
 # Backend logs
 cat backend/logs/combined.log
 
@@ -159,10 +156,6 @@ kubectl get namespaces | grep store-
 ```powershell
 # Delete cluster
 k3d cluster delete urumi-local
-
-# Remove database
-docker stop urumi-postgres
-docker rm urumi-postgres
 ```
 
 ## Project Structure
@@ -185,7 +178,7 @@ D:\Urumi\
 ## Technology Stack
 
 **Frontend**: React + TypeScript + Tailwind CSS + React Query
-**Backend**: Node.js + Express + PostgreSQL + Winston
+**Backend**: Node.js + Express + Supabase + Winston
 **Infrastructure**: Kubernetes (k3d/k3s) + Helm + Docker
 
 ## Success Metrics

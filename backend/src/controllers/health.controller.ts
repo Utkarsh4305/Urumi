@@ -1,18 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import kubernetesService from '../services/kubernetes.service';
 import helmService from '../services/helm.service';
-import knex from 'knex';
-import dbConfig from '../config/database';
+import { supabase } from '../config/supabase';
 import logger from '../utils/logger';
-
-const db = knex(dbConfig[process.env.NODE_ENV || 'development']);
 
 export class HealthController {
   /**
    * Health check endpoint
    * GET /api/health
    */
-  async checkHealth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async checkHealth(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const health = {
         status: 'healthy',
@@ -24,10 +21,14 @@ export class HealthController {
         }
       };
 
-      // Check database
+      // Check database (Supabase)
       try {
-        await db.raw('SELECT 1');
-        health.checks.database = true;
+        const { error } = await supabase.from('stores').select('id').limit(1);
+        health.checks.database = !error;
+        if (error) {
+          logger.error('Database health check failed', { error: error.message });
+          health.status = 'unhealthy';
+        }
       } catch (error: any) {
         logger.error('Database health check failed', { error: error.message });
         health.status = 'unhealthy';

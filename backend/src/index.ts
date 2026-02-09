@@ -1,15 +1,14 @@
-import dotenv from 'dotenv';
-import path from 'path';
+// Load environment variables FIRST
+import './config/env';
+
 import express, { Application } from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import logger from './utils/logger';
-import fs from 'fs';
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Create logs directory if it doesn't exist
 const logsDir = path.join(__dirname, '../logs');

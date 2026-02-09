@@ -3,23 +3,43 @@ import logger from '../utils/logger';
 
 export class KubernetesService {
   private kc: k8s.KubeConfig;
-  private coreApi: k8s.CoreV1Api;
-  private appsApi: k8s.AppsV1Api;
-  private networkingApi: k8s.NetworkingV1Api;
+  private coreApi: k8s.CoreV1Api | null = null;
+  private appsApi: k8s.AppsV1Api | null = null;
+  private networkingApi: k8s.NetworkingV1Api | null = null;
+  private initialized: boolean = false;
 
   constructor() {
     this.kc = new k8s.KubeConfig();
-    this.kc.loadFromDefault();
+    try {
+      this.kc.loadFromDefault();
+      this.coreApi = this.kc.makeApiClient(k8s.CoreV1Api);
+      this.appsApi = this.kc.makeApiClient(k8s.AppsV1Api);
+      this.networkingApi = this.kc.makeApiClient(k8s.NetworkingV1Api);
+      this.initialized = true;
+      logger.info('Kubernetes client initialized successfully');
+    } catch (error: any) {
+      logger.warn('Kubernetes not available - kubeconfig not found or invalid', {
+        error: error.message
+      });
+      this.initialized = false;
+    }
+  }
 
-    this.coreApi = this.kc.makeApiClient(k8s.CoreV1Api);
-    this.appsApi = this.kc.makeApiClient(k8s.AppsV1Api);
-    this.networkingApi = this.kc.makeApiClient(k8s.NetworkingV1Api);
+  isAvailable(): boolean {
+    return this.initialized;
+  }
+
+  private ensureAvailable(): void {
+    if (!this.initialized || !this.coreApi || !this.appsApi || !this.networkingApi) {
+      throw new Error('Kubernetes is not available - kubeconfig not found or invalid');
+    }
   }
 
   /**
    * Create a new namespace
    */
   async createNamespace(name: string): Promise<void> {
+    this.ensureAvailable();
     try {
       const namespace: k8s.V1Namespace = {
         metadata: {
@@ -31,7 +51,7 @@ export class KubernetesService {
         }
       };
 
-      await this.coreApi.createNamespace(namespace);
+      await this.coreApi!.createNamespace(namespace);
       logger.info('Namespace created', { namespace: name });
     } catch (error: any) {
       if (error.statusCode === 409) {
@@ -50,8 +70,9 @@ export class KubernetesService {
    * Delete a namespace
    */
   async deleteNamespace(name: string): Promise<void> {
+    this.ensureAvailable();
     try {
-      await this.coreApi.deleteNamespace(name);
+      await this.coreApi!.deleteNamespace(name);
       logger.info('Namespace deleted', { namespace: name });
     } catch (error: any) {
       if (error.statusCode === 404) {
@@ -70,8 +91,9 @@ export class KubernetesService {
    * Check if namespace exists
    */
   async namespaceExists(name: string): Promise<boolean> {
+    this.ensureAvailable();
     try {
-      await this.coreApi.readNamespace(name);
+      await this.coreApi!.readNamespace(name);
       return true;
     } catch (error: any) {
       if (error.statusCode === 404) {
@@ -85,8 +107,9 @@ export class KubernetesService {
    * Get deployment status
    */
   async getDeploymentStatus(namespace: string, name: string): Promise<boolean> {
+    if (!this.initialized) return false;
     try {
-      const response = await this.appsApi.readNamespacedDeployment(name, namespace);
+      const response = await this.appsApi!.readNamespacedDeployment(name, namespace);
       const deployment = response.body;
 
       const ready = deployment.status?.readyReplicas || 0;
@@ -110,8 +133,9 @@ export class KubernetesService {
    * Get StatefulSet status
    */
   async getStatefulSetStatus(namespace: string, name: string): Promise<boolean> {
+    if (!this.initialized) return false;
     try {
-      const response = await this.appsApi.readNamespacedStatefulSet(name, namespace);
+      const response = await this.appsApi!.readNamespacedStatefulSet(name, namespace);
       const statefulSet = response.body;
 
       const ready = statefulSet.status?.readyReplicas || 0;
@@ -135,8 +159,9 @@ export class KubernetesService {
    * Get all pods in a namespace
    */
   async getPods(namespace: string): Promise<k8s.V1Pod[]> {
+    this.ensureAvailable();
     try {
-      const response = await this.coreApi.listNamespacedPod(namespace);
+      const response = await this.coreApi!.listNamespacedPod(namespace);
       return response.body.items;
     } catch (error: any) {
       logger.error('Failed to get pods', { namespace, error: error.message });
@@ -173,8 +198,9 @@ export class KubernetesService {
    * Get ingress hostname
    */
   async getIngressHost(namespace: string, name: string): Promise<string | null> {
+    if (!this.initialized) return null;
     try {
-      const response = await this.networkingApi.readNamespacedIngress(name, namespace);
+      const response = await this.networkingApi!.readNamespacedIngress(name, namespace);
       const ingress = response.body;
 
       const host = ingress.spec?.rules?.[0]?.host || null;
@@ -192,8 +218,9 @@ export class KubernetesService {
    * Check cluster connectivity
    */
   async checkConnectivity(): Promise<boolean> {
+    if (!this.initialized) return false;
     try {
-      await this.coreApi.listNamespace();
+      await this.coreApi!.listNamespace();
       return true;
     } catch (error: any) {
       logger.error('Failed to connect to Kubernetes cluster', {
