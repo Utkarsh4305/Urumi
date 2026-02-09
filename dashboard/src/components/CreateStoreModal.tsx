@@ -28,116 +28,111 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-scale-in">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="glass-card max-w-lg w-full p-6 animate-scale-in">
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Create New Store</h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Create New Store</h2>
+            <p className="text-sm text-slate-500 mt-0.5">Choose your platform</p>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors rounded-lg p-1 hover:bg-gray-100"
+            className="text-slate-400 hover:text-slate-600 transition-colors rounded-lg p-2 hover:bg-slate-100/50"
             disabled={createStore.isPending}
           >
-            <XMarkIcon className="w-6 h-6" />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-4">
-              Choose Store Type
+          <div className="mb-6 space-y-3">
+            {/* WooCommerce Card */}
+            <label
+              className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer
+                         transition-all duration-200 hover:shadow-md
+                         ${storeType === 'woocommerce'
+                  ? 'border-violet-400 bg-violet-50/50'
+                  : 'border-slate-200/50 bg-white/50 hover:border-slate-300'}`}
+            >
+              <input
+                type="radio"
+                name="storeType"
+                value="woocommerce"
+                checked={storeType === 'woocommerce'}
+                onChange={(e) => setStoreType(e.target.value as StoreType)}
+                className="sr-only"
+                disabled={createStore.isPending}
+              />
+
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/20">
+                <ShoppingCartIcon className="w-6 h-6 text-white" />
+              </div>
+
+              <div className="flex-1 ml-4">
+                <h4 className="font-semibold text-slate-800">WooCommerce</h4>
+                <p className="text-sm text-slate-500">WordPress + WooCommerce</p>
+              </div>
+
+              {storeType === 'woocommerce' && (
+                <div className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center">
+                  <CheckIcon className="w-4 h-4 text-white" />
+                </div>
+              )}
             </label>
-            <div className="grid grid-cols-1 gap-4">
-              {/* WooCommerce Card */}
-              <label
-                className={`relative flex flex-col p-6 border-2 rounded-xl cursor-pointer
-                           transition-all duration-200 hover:shadow-lg
-                           ${storeType === 'woocommerce' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}
-              >
-                <input
-                  type="radio"
-                  name="storeType"
-                  value="woocommerce"
-                  checked={storeType === 'woocommerce'}
-                  onChange={(e) => setStoreType(e.target.value as StoreType)}
-                  className="sr-only"
-                  disabled={createStore.isPending}
-                />
 
-                {/* Icon */}
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-peach flex items-center justify-center flex-shrink-0">
-                    <ShoppingCartIcon className="w-6 h-6 text-white" />
-                  </div>
+            {/* Medusa card (disabled) */}
+            <label className="relative flex items-center p-4 border-2 border-slate-200/50 rounded-xl opacity-50 cursor-not-allowed bg-slate-50/30">
+              <input
+                type="radio"
+                name="storeType"
+                value="medusa"
+                disabled={true}
+                className="sr-only"
+              />
 
-                  {/* Content */}
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-1">WooCommerce</h4>
-                    <p className="text-sm text-gray-500">WordPress + WooCommerce ecommerce platform</p>
-                  </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                <ShoppingCartIcon className="w-6 h-6 text-white" />
+              </div>
 
-                  {/* Check indicator */}
-                  {storeType === 'woocommerce' && (
-                    <div className="flex-shrink-0">
-                      <CheckIcon className="w-6 h-6 text-primary-500" />
-                    </div>
-                  )}
-                </div>
-              </label>
+              <div className="flex-1 ml-4">
+                <h4 className="font-semibold text-slate-600">Medusa</h4>
+                <p className="text-sm text-slate-400">Headless commerce</p>
+              </div>
 
-              {/* Medusa card (disabled) */}
-              <label className="relative flex flex-col p-6 border-2 border-gray-200 rounded-xl opacity-50 cursor-not-allowed">
-                <input
-                  type="radio"
-                  name="storeType"
-                  value="medusa"
-                  checked={storeType === 'medusa'}
-                  onChange={(e) => setStoreType(e.target.value as StoreType)}
-                  className="sr-only"
-                  disabled={true}
-                />
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-lavender flex items-center justify-center flex-shrink-0">
-                    <ShoppingCartIcon className="w-6 h-6 text-white" />
-                  </div>
-
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-1">Medusa</h4>
-                    <p className="text-sm text-gray-500">Headless commerce platform</p>
-                  </div>
-
-                  {/* Coming Soon badge */}
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
-                    Coming Soon
-                  </span>
-                </div>
-              </label>
-            </div>
+              <span className="px-2.5 py-1 bg-slate-200/80 text-slate-500 text-xs font-semibold rounded-full">
+                Soon
+              </span>
+            </label>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex gap-3">
-            <InformationCircleIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          {/* Info box */}
+          <div className="bg-sky-50/60 border border-sky-200/50 rounded-xl p-4 mb-6 flex gap-3">
+            <div className="w-9 h-9 rounded-lg bg-sky-100 flex items-center justify-center flex-shrink-0">
+              <InformationCircleIcon className="w-5 h-5 text-sky-600" />
+            </div>
             <div>
-              <p className="text-sm text-blue-800 font-medium mb-1">Provisioning Time</p>
-              <p className="text-sm text-blue-700">
-                Store setup takes 2-3 minutes. You'll receive access once the status shows "Ready".
+              <p className="text-sm text-sky-800 font-medium">Setup takes 2-3 minutes</p>
+              <p className="text-sm text-sky-600 mt-0.5">
+                You'll get access when status shows "Ready"
               </p>
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={createStore.isPending}
-              className="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-secondary flex-1 py-3"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createStore.isPending}
-              className="flex-1 bg-primary-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 flex items-center justify-center gap-2"
+              className="btn-primary flex-1 py-3 flex items-center justify-center gap-2"
             >
               {createStore.isPending ? (
                 <>

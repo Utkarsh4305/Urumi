@@ -6,7 +6,9 @@ interface StatusBadgeProps {
 }
 
 interface BadgeStyle {
-  className: string;
+  bg: string;
+  text: string;
+  dot: string;
   icon: React.ReactNode;
   pulse: boolean;
 }
@@ -16,31 +18,41 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     switch (status) {
       case 'Provisioning':
         return {
-          className: 'bg-blue-50 text-blue-700 border-blue-200',
-          icon: <ClockIcon className="w-3.5 h-3.5 animate-spin" />,
+          bg: 'bg-sky-50/80 border-sky-200/50',
+          text: 'text-sky-700',
+          dot: 'bg-sky-500',
+          icon: <ClockIcon className="w-3.5 h-3.5" />,
           pulse: true,
         };
       case 'Ready':
         return {
-          className: 'bg-green-50 text-green-700 border-green-200',
+          bg: 'bg-emerald-50/80 border-emerald-200/50',
+          text: 'text-emerald-700',
+          dot: 'bg-emerald-500',
           icon: <CheckCircleIcon className="w-3.5 h-3.5" />,
           pulse: false,
         };
       case 'Failed':
         return {
-          className: 'bg-red-50 text-red-700 border-red-200',
+          bg: 'bg-rose-50/80 border-rose-200/50',
+          text: 'text-rose-700',
+          dot: 'bg-rose-500',
           icon: <ExclamationCircleIcon className="w-3.5 h-3.5" />,
           pulse: false,
         };
       case 'Deleting':
         return {
-          className: 'bg-gray-50 text-gray-700 border-gray-200',
+          bg: 'bg-slate-50/80 border-slate-200/50',
+          text: 'text-slate-600',
+          dot: 'bg-slate-500',
           icon: <TrashIcon className="w-3.5 h-3.5" />,
           pulse: true,
         };
       default:
         return {
-          className: 'bg-gray-50 text-gray-700 border-gray-200',
+          bg: 'bg-slate-50/80 border-slate-200/50',
+          text: 'text-slate-600',
+          dot: 'bg-slate-400',
           icon: null,
           pulse: false,
         };
@@ -50,12 +62,13 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const style = getBadgeStyle(status);
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-                  text-xs font-semibold border ${style.className}
-                  ${style.pulse ? 'animate-pulse' : ''}`}
-    >
-      {style.icon}
+    <span className={`status-pill ${style.bg} ${style.text} border`}>
+      <span className="relative flex h-2 w-2">
+        {style.pulse && (
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${style.dot} opacity-75`}></span>
+        )}
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${style.dot}`}></span>
+      </span>
       {status}
     </span>
   );

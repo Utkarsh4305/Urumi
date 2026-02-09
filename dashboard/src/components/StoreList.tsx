@@ -7,12 +7,16 @@ interface StoreListProps {
 
 export function StoreList({ stores }: StoreListProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
       {stores.map((store, index) => {
-        // Every 6th card (starting from index 0) spans 2 columns on desktop for variety
-        const isWide = index % 6 === 0;
+        const isWide = index % 6 === 0 && stores.length > 2;
+
         return (
-          <div key={store.id} className={isWide ? 'lg:col-span-2' : ''}>
+          <div
+            key={store.id}
+            className={isWide ? 'xl:col-span-2' : ''}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
             <StoreCard store={store} />
           </div>
         );

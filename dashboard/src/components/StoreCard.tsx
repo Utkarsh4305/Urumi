@@ -9,23 +9,39 @@ interface StoreCardProps {
   store: Store;
 }
 
-// Assign gradient background based on status
-const getCardGradient = (status: StoreStatus) => {
+const getCardStyles = (status: StoreStatus) => {
   switch (status) {
     case 'Provisioning':
-      return 'bg-gradient-blue';
+      return {
+        accent: 'border-sky-200/50',
+        iconBg: 'bg-sky-100',
+        iconColor: 'text-sky-600',
+      };
     case 'Ready':
-      return 'bg-gradient-mint';
+      return {
+        accent: 'border-emerald-200/50',
+        iconBg: 'bg-emerald-100',
+        iconColor: 'text-emerald-600',
+      };
     case 'Failed':
-      return 'bg-gradient-coral';
+      return {
+        accent: 'border-rose-200/50',
+        iconBg: 'bg-rose-100',
+        iconColor: 'text-rose-600',
+      };
     default:
-      return 'bg-gradient-sand';
+      return {
+        accent: 'border-slate-200/50',
+        iconBg: 'bg-slate-100',
+        iconColor: 'text-slate-600',
+      };
   }
 };
 
 export function StoreCard({ store }: StoreCardProps) {
   const deleteStore = useDeleteStore();
   const [isDeleting, setIsDeleting] = useState(false);
+  const styles = getCardStyles(store.status);
 
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete store ${store.id}?`)) {
@@ -56,33 +72,31 @@ export function StoreCard({ store }: StoreCardProps) {
 
   return (
     <div
-      className={`rounded-2xl p-6 ${getCardGradient(store.status)}
-                  border border-gray-100 hover:shadow-xl transition-all duration-300
-                  animate-scale-in`}
+      className={`glass-card glass-card-hover p-5 ${styles.accent} animate-scale-in`}
     >
-      {/* Header with icon */}
+      {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
-            <ShoppingBagIcon className="w-6 h-6 text-gray-700" />
+          <div className={`w-11 h-11 rounded-xl ${styles.iconBg} flex items-center justify-center`}>
+            <ShoppingBagIcon className={`w-5 h-5 ${styles.iconColor}`} />
           </div>
           <div>
-            <h3 className="card-title">{store.id}</h3>
-            <p className="card-subtitle capitalize">{store.type}</p>
+            <h3 className="font-semibold text-slate-800">{store.id}</h3>
+            <p className="text-sm text-slate-500 capitalize">{store.type}</p>
           </div>
         </div>
         <StatusBadge status={store.status} />
       </div>
 
-      {/* URL section with better styling */}
+      {/* URL section */}
       {store.url && (
-        <div className="mb-4 p-3 bg-white/60 rounded-lg backdrop-blur-sm">
-          <p className="text-xs text-gray-500 mb-1 font-medium">Store URL</p>
+        <div className="mb-4 p-3 bg-white/50 rounded-xl border border-slate-100">
+          <p className="text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Store URL</p>
           <a
             href={`http://${store.url}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 break-all"
+            className="text-sm font-medium text-violet-600 hover:text-violet-700 break-all transition-colors"
           >
             {store.url}
           </a>
@@ -91,16 +105,18 @@ export function StoreCard({ store }: StoreCardProps) {
 
       {/* Error message */}
       {store.error_message && (
-        <div className="mb-4 p-3 bg-white/80 border border-red-200 rounded-lg">
-          <p className="text-xs text-red-800 font-semibold mb-1">Error:</p>
-          <p className="text-sm text-red-700">{store.error_message}</p>
+        <div className="mb-4 p-3 bg-rose-50/80 border border-rose-200 rounded-xl">
+          <p className="text-xs text-rose-700 font-semibold mb-1">Error:</p>
+          <p className="text-sm text-rose-600">{store.error_message}</p>
         </div>
       )}
 
-      {/* Metadata row */}
-      <div className="flex items-center justify-between text-xs text-gray-600 mb-4">
+      {/* Metadata */}
+      <div className="flex items-center justify-between text-xs text-slate-400 mb-4 px-0.5">
         <span>Created {formatDate(store.created_at)}</span>
-        <span className="font-mono">ID: {store.id.slice(0, 8)}</span>
+        <span className="font-mono bg-slate-100/50 px-2 py-0.5 rounded text-slate-500">
+          {store.id.slice(0, 8)}
+        </span>
       </div>
 
       {/* Actions */}
@@ -109,18 +125,18 @@ export function StoreCard({ store }: StoreCardProps) {
           <>
             <button
               onClick={openStore}
-              className="flex-1 bg-white/90 text-primary-700 px-4 py-2.5 rounded-lg text-sm font-medium
-                         hover:bg-white hover:shadow-md transition-all flex items-center justify-center gap-2
-                         border border-primary-200"
+              className="flex-1 bg-violet-50 text-violet-700 px-3 py-2 rounded-lg text-sm font-medium
+                         hover:bg-violet-100 transition-all flex items-center justify-center gap-1.5
+                         border border-violet-200/50"
             >
               <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-              Open Store
+              Open
             </button>
             <button
               onClick={openAdmin}
-              className="flex-1 bg-white/70 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium
-                         hover:bg-white hover:shadow-md transition-all flex items-center justify-center gap-2
-                         border border-gray-200"
+              className="flex-1 bg-slate-50 text-slate-600 px-3 py-2 rounded-lg text-sm font-medium
+                         hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5
+                         border border-slate-200/50"
             >
               <CogIcon className="w-4 h-4" />
               Admin
@@ -132,13 +148,13 @@ export function StoreCard({ store }: StoreCardProps) {
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-white/70 text-red-700 px-4 py-2.5 rounded-lg text-sm font-medium
-                       hover:bg-white hover:shadow-md transition-all disabled:opacity-50
-                       disabled:cursor-not-allowed flex items-center justify-center gap-2
-                       border border-red-200"
+            className="bg-rose-50 text-rose-600 px-3 py-2 rounded-lg text-sm font-medium
+                       hover:bg-rose-100 transition-all disabled:opacity-50
+                       disabled:cursor-not-allowed flex items-center justify-center gap-1.5
+                       border border-rose-200/50"
           >
             <TrashIcon className="w-4 h-4" />
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {isDeleting ? '...' : 'Delete'}
           </button>
         )}
       </div>

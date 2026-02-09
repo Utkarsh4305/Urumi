@@ -14,51 +14,60 @@ export function Header({ stores, onCreateStore }: HeaderProps) {
   const failedCount = stores.filter((s) => s.status === 'Failed').length;
 
   return (
-    <header className="bg-white border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Top row: Logo + Actions */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Urumi</h1>
-            <p className="text-sm text-gray-500 mt-1">Store Provisioning Platform</p>
-          </div>
-          <button
-            onClick={onCreateStore}
-            className="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium
-                       hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/30
-                       hover:shadow-xl hover:shadow-primary-500/40 flex items-center gap-2"
-          >
-            <PlusIcon className="w-5 h-5" />
-            Create Store
-          </button>
-        </div>
+    <header className="sticky top-0 z-20">
+      {/* Transparent glass header */}
+      <div className="bg-white/60 backdrop-blur-xl border-b border-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {/* Top row: Logo + Actions */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              {/* Logo mark with gradient */}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                <span className="text-white font-bold text-lg">U</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-slate-800">Urumi</h1>
+                <p className="text-xs text-slate-500 font-medium">Store Platform</p>
+              </div>
+            </div>
 
-        {/* Stats row: Quick metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            label="Total Stores"
-            value={totalStores}
-            color="gray"
-            icon={<ShoppingBagIcon className="w-5 h-5" />}
-          />
-          <StatCard
-            label="Provisioning"
-            value={provisioningCount}
-            color="blue"
-            icon={<ClockIcon className="w-5 h-5" />}
-          />
-          <StatCard
-            label="Ready"
-            value={readyCount}
-            color="green"
-            icon={<CheckCircleIcon className="w-5 h-5" />}
-          />
-          <StatCard
-            label="Failed"
-            value={failedCount}
-            color="red"
-            icon={<ExclamationCircleIcon className="w-5 h-5" />}
-          />
+            <button
+              onClick={onCreateStore}
+              className="btn-primary flex items-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Store</span>
+              <span className="sm:hidden">New</span>
+            </button>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <StatCard
+              label="Total Stores"
+              value={totalStores}
+              variant="default"
+              icon={<ShoppingBagIcon className="w-5 h-5" />}
+            />
+            <StatCard
+              label="Provisioning"
+              value={provisioningCount}
+              variant="info"
+              icon={<ClockIcon className="w-5 h-5" />}
+            />
+            <StatCard
+              label="Ready"
+              value={readyCount}
+              variant="success"
+              icon={<CheckCircleIcon className="w-5 h-5" />}
+            />
+            <StatCard
+              label="Failed"
+              value={failedCount}
+              variant="danger"
+              icon={<ExclamationCircleIcon className="w-5 h-5" />}
+            />
+          </div>
         </div>
       </div>
     </header>
