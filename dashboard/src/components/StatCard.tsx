@@ -8,28 +8,28 @@ interface StatCardProps {
 export function StatCard({ label, value, variant = 'default', icon }: StatCardProps) {
   const variantStyles = {
     default: {
-      bg: 'bg-white/60',
-      iconBg: 'bg-slate-100',
+      bg: 'from-white/50 to-slate-50/40',
+      iconBg: 'bg-gradient-to-br from-slate-100 to-slate-200/80',
       iconColor: 'text-slate-600',
-      valueColor: 'text-slate-800',
+      valueColor: 'bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent',
     },
     info: {
-      bg: 'bg-sky-50/60',
-      iconBg: 'bg-sky-100',
+      bg: 'from-sky-50/60 to-cyan-50/40',
+      iconBg: 'bg-gradient-to-br from-sky-100 to-cyan-100',
       iconColor: 'text-sky-600',
-      valueColor: 'text-sky-700',
+      valueColor: 'bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent',
     },
     success: {
-      bg: 'bg-emerald-50/60',
-      iconBg: 'bg-emerald-100',
+      bg: 'from-emerald-50/60 to-teal-50/40',
+      iconBg: 'bg-gradient-to-br from-emerald-100 to-teal-100',
       iconColor: 'text-emerald-600',
-      valueColor: 'text-emerald-700',
+      valueColor: 'bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent',
     },
     danger: {
-      bg: 'bg-rose-50/60',
-      iconBg: 'bg-rose-100',
+      bg: 'from-rose-50/60 to-pink-50/40',
+      iconBg: 'bg-gradient-to-br from-rose-100 to-pink-100',
       iconColor: 'text-rose-600',
-      valueColor: 'text-rose-700',
+      valueColor: 'bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent',
     },
   };
 
@@ -37,16 +37,19 @@ export function StatCard({ label, value, variant = 'default', icon }: StatCardPr
 
   return (
     <div
-      className={`${styles.bg} backdrop-blur-sm rounded-xl p-4 border border-white/60
-                  transition-all duration-300 hover:bg-white/80 hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5`}
+      className={`bg-gradient-to-br ${styles.bg} backdrop-blur-md rounded-xl p-4 
+                  border border-white/60 shadow-sm
+                  transition-all duration-300 
+                  hover:shadow-lg hover:shadow-violet-500/10 
+                  hover:-translate-y-0.5 hover:border-white/80`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="metric-label">{label}</p>
-          <p className={`text-2xl font-bold tracking-tight mt-1 ${styles.valueColor}`}>{value}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500/80">{label}</p>
+          <p className={`text-2xl font-extrabold tracking-tight mt-1 ${styles.valueColor}`}>{value}</p>
         </div>
         {icon && (
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${styles.iconBg} ${styles.iconColor}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${styles.iconBg} ${styles.iconColor}`}>
             {icon}
           </div>
         )}

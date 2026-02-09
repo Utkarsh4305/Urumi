@@ -57,8 +57,8 @@ function App() {
                 <>
                   {/* Section Header */}
                   <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-1">Your Stores</h2>
-                    <p className="text-slate-500">Manage and monitor your provisioned stores</p>
+                    <h2 className="text-2xl font-extrabold bg-gradient-to-r from-slate-800 via-violet-700 to-indigo-800 bg-clip-text text-transparent mb-1 tracking-tight">Your Stores</h2>
+                    <p className="text-slate-500/90 font-medium">Manage and monitor your provisioned stores</p>
                   </div>
 
                   {/* Store Grid */}

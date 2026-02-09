@@ -14,28 +14,34 @@ export function Header({ stores, onCreateStore }: HeaderProps) {
   const failedCount = stores.filter((s) => s.status === 'Failed').length;
 
   return (
-    <header className="sticky top-0 z-20">
-      {/* Transparent glass header */}
-      <div className="bg-white/60 backdrop-blur-xl border-b border-white/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <header className="sticky top-0 z-20 pt-4 px-4 sm:px-6 lg:px-8">
+      {/* Glass morphism header container */}
+      <div className="max-w-7xl mx-auto">
+        <div className="glass-header rounded-2xl p-4 sm:p-6">
           {/* Top row: Logo + Actions */}
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              {/* Logo mark with gradient */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                <span className="text-white font-bold text-lg">U</span>
+              {/* Logo mark with animated gradient */}
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30 ring-2 ring-white/20">
+                <span className="text-white font-extrabold text-lg drop-shadow-sm">U</span>
               </div>
               <div>
-                <h1 className="text-lg font-bold text-slate-800">Urumi</h1>
-                <p className="text-xs text-slate-500 font-medium">Store Platform</p>
+                <h1 className="text-xl font-extrabold bg-gradient-to-r from-slate-800 via-violet-700 to-indigo-700 bg-clip-text text-transparent tracking-tight">
+                  Urumi
+                </h1>
+                <p className="text-xs text-slate-500/90 font-semibold tracking-wide uppercase">Store Platform</p>
               </div>
             </div>
 
             <button
               onClick={onCreateStore}
-              className="btn-primary flex items-center gap-2"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-white text-sm
+                         bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-600
+                         shadow-lg shadow-violet-500/30 ring-1 ring-white/20
+                         hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5
+                         active:scale-[0.98] transition-all duration-200"
             >
-              <PlusIcon className="w-4 h-4" />
+              <PlusIcon className="w-4 h-4 stroke-[2.5]" />
               <span className="hidden sm:inline">Create Store</span>
               <span className="sm:hidden">New</span>
             </button>
