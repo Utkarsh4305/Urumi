@@ -31,9 +31,19 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
+          {{- if .paths }}
           {{- range .paths }}
           - path: {{ .path }}
             pathType: {{ .pathType }}
+            backend:
+              service:
+                name: wordpress
+                port:
+                  number: 80
+          {{- end }}
+          {{- else }}
+          - path: /
+            pathType: Prefix
             backend:
               service:
                 name: wordpress

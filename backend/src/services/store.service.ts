@@ -85,11 +85,38 @@ export class StoreService {
 
       // 5. Wait for resources to be ready (max 5 minutes)
       const isReady = await monitorService.waitForReady(store.namespace, {
-        timeout: 300000 // 5 minutes
+        timeout: 600000 // 10 minutes
       });
 
       if (!isReady) {
-        throw new Error('Store did not become ready within timeout (5 minutes)');
+        // Collect diagnostic info before throwing
+        const pods = await kubernetesService.getPods(store.namespace);
+        const podDiagnostics = await Promise.all(pods.map(async (p) => {
+          const name = p.metadata?.name || 'unknown';
+          const status = p.status?.phase;
+          const containerStatuses = p.status?.containerStatuses?.map(cs => ({
+            name: cs.name,
+            state: cs.state,
+            ready: cs.ready,
+            restartCount: cs.restartCount
+          }));
+
+          // Fetch logs if the pod isn't running properly
+          let logs = 'Pod is running';
+          if (status !== 'Running' || containerStatuses?.some(cs => !cs.ready)) {
+            logs = await kubernetesService.getPodLogs(store.namespace, name);
+          }
+
+          return { name, status, containerStatuses, logs };
+        }));
+
+        logger.error('Store readiness timeout diagnostics', {
+          storeId: store.id,
+          namespace: store.namespace,
+          pods: podDiagnostics
+        });
+
+        throw new Error('Store did not become ready within timeout (10 minutes). Detailed diagnostics and POD LOGS have been written to logs/provisioning.log');
       }
 
       // 6. Update status to "Ready"

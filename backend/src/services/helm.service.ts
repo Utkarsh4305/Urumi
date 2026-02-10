@@ -11,13 +11,19 @@ export interface HelmValues {
 
 export class HelmService {
   private chartPath: string;
+  private helmBinaryPath: string;
 
   constructor() {
-    this.chartPath = path.resolve(
-      __dirname,
-      process.env.HELM_CHART_PATH || '../../helm/store'
-    );
-    logger.info('Helm service initialized', { chartPath: this.chartPath });
+    const envChartPath = process.env.HELM_CHART_PATH || '../helm/store';
+    this.chartPath = path.isAbsolute(envChartPath)
+      ? envChartPath
+      : path.resolve(process.cwd(), envChartPath);
+
+    this.helmBinaryPath = process.env.HELM_BINARY_PATH || 'helm';
+    logger.info('Helm service initialized', {
+      chartPath: this.chartPath,
+      helmBinaryPath: this.helmBinaryPath
+    });
   }
 
   /**
@@ -35,7 +41,7 @@ export class HelmService {
     const valuesFilePath = path.join(this.chartPath, valuesFile);
 
     const command = [
-      'helm', 'install',
+      this.helmBinaryPath, 'install',
       releaseName,
       this.chartPath,
       '--namespace', namespace,
@@ -47,7 +53,7 @@ export class HelmService {
       '--set', `mysql.auth.password=${values.dbPassword}`,
       '--set', `ingress.hosts[0].host=${values.ingressHost}`,
       '--wait',
-      '--timeout', '5m'
+      '--timeout', '10m'
     ].join(' ');
 
     logger.info('Installing Helm chart', {
@@ -58,7 +64,7 @@ export class HelmService {
     });
 
     try {
-      const result = await execCommand(command, { timeout: 360000 }); // 6 minutes
+      const result = await execCommand(command, { timeout: 660000 }); // 11 minutes
       logger.info('Helm chart installed successfully', {
         releaseName,
         namespace,
@@ -80,7 +86,7 @@ export class HelmService {
    */
   async uninstall(releaseName: string, namespace: string): Promise<void> {
     const command = [
-      'helm', 'uninstall',
+      this.helmBinaryPath, 'uninstall',
       releaseName,
       '--namespace', namespace,
       '--wait',
@@ -97,6 +103,15 @@ export class HelmService {
         stdout: result.stdout
       });
     } catch (error: any) {
+      if (
+        error.message?.includes('not found') ||
+        error.stderr?.includes('not found') ||
+        error.message?.includes('Release not loaded')
+      ) {
+        logger.warn('Helm release not found, skipping uninstall', { releaseName, namespace });
+        return;
+      }
+
       logger.error('Helm uninstall failed', {
         releaseName,
         namespace,
@@ -112,7 +127,7 @@ export class HelmService {
    */
   async getStatus(releaseName: string, namespace: string): Promise<string | null> {
     const command = [
-      'helm', 'status',
+      this.helmBinaryPath, 'status',
       releaseName,
       '--namespace', namespace,
       '--output', 'json'
@@ -140,7 +155,7 @@ export class HelmService {
    */
   async checkHelm(): Promise<boolean> {
     try {
-      await execCommand('helm version');
+      await execCommand(`${this.helmBinaryPath} version`);
       return true;
     } catch (error) {
       logger.error('Helm is not installed or not in PATH');

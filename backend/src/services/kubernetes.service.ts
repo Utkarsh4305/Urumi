@@ -215,6 +215,20 @@ export class KubernetesService {
   }
 
   /**
+   * Get logs for a specific pod
+   */
+  async getPodLogs(namespace: string, podName: string): Promise<string> {
+    this.ensureAvailable();
+    try {
+      const response = await this.coreApi!.readNamespacedPodLog(podName, namespace);
+      return response.body as unknown as string;
+    } catch (error: any) {
+      logger.warn('Failed to get pod logs', { namespace, podName, error: error.message });
+      return `Failed to fetch logs: ${error.message}`;
+    }
+  }
+
+  /**
    * Check cluster connectivity
    */
   async checkConnectivity(): Promise<boolean> {

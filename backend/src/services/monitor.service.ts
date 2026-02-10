@@ -78,12 +78,14 @@ export class MonitorService {
         return false;
       }
 
+      /*
       // Optional: HTTP check to verify WordPress is responding
       const httpReady = await this.checkHttpEndpoint(namespace);
       if (!httpReady) {
         logger.debug('HTTP endpoint not ready', { namespace });
         return false;
       }
+      */
 
       return true;
     } catch (error: any) {

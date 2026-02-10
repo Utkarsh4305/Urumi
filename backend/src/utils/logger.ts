@@ -9,7 +9,10 @@ const logger = winston.createLogger({
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
     winston.format.splat(),
-    winston.format.json()
+    winston.format.printf(({ timestamp, level, message, service, ...meta }) => {
+      const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+      return `[${timestamp}] [${level.toUpperCase()}] [${service}]: ${message} ${metaString}`;
+    })
   ),
   defaultMeta: { service: 'urumi-backend' },
   transports: [
@@ -23,6 +26,12 @@ const logger = winston.createLogger({
     // Write all logs to combined.log
     new winston.transports.File({
       filename: path.join(__dirname, '../../logs/combined.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    }),
+    // Dedicated provisioning log
+    new winston.transports.File({
+      filename: path.join(__dirname, '../../logs/provisioning.log'),
       maxsize: 5242880, // 5MB
       maxFiles: 5
     })
